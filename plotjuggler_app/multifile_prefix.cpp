@@ -10,6 +10,7 @@
 #include <QLabel>
 #include <QFormLayout>
 #include <QFileInfo>
+#include <QListWidgetItem>
 #include <QSettings>
 
 DialogMultifilePrefix::DialogMultifilePrefix(QStringList filenames, QWidget* parent)
@@ -28,20 +29,31 @@ DialogMultifilePrefix::DialogMultifilePrefix(QStringList filenames, QWidget* par
     _previous_prefixes.insert({ prev_prefixes[i], prev_prefixes[i + 1] });
   }
 
-  int index = 0;
+  // use a list widget that automatically enables scrolls if the number of files is too high
+  QListWidget* listWidget = new QListWidget(this);
+  listWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+  listWidget->setMinimumSize(QSize(550, 250));
+  vlayout->addWidget(listWidget);
+
   for (QString filename : filenames)
   {
+    auto item = new QListWidgetItem(listWidget);
+    auto rowWidget = new QWidget(listWidget);
+    auto rowLayout = new QVBoxLayout(rowWidget);
+
     auto label_file = new QLabel(filename, this);
     label_file->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    rowLayout->addWidget(label_file, 1);
 
     auto form_layout = new QFormLayout();
     auto label = new QLabel("Prefix: ");
     auto line_edit = new QLineEdit();
 
     form_layout->addRow(label, line_edit);
+    rowLayout->addLayout(form_layout);
 
-    vlayout->insertWidget(index++, label_file);
-    vlayout->insertLayout(index++, form_layout);
+    item->setSizeHint(rowWidget->sizeHint());
+    listWidget->setItemWidget(item, rowWidget);
 
     if (_previous_prefixes.count(filename))
     {
