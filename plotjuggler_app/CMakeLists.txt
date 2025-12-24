@@ -134,6 +134,22 @@ target_link_libraries(
           lua::lua
         )
 
+get_target_property(_qmake_executable Qt5::qmake LOCATION)
+get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${_qt_bin_dir}")
+
+if(WINDEPLOYQT_EXECUTABLE)
+  add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+          COMMAND "${CMAKE_COMMAND}" -E env PATH="${_qt_bin_dir}"
+          "${WINDEPLOYQT_EXECUTABLE}"
+          --verbose 0
+          --no-compiler-runtime
+          --no-opengl-sw
+          --dir "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+          "$<TARGET_FILE:${PROJECT_NAME}>"
+  )
+endif()
+
 if(COMPILING_WITH_CATKIN)
   target_link_libraries(plotjuggler PRIVATE ${catkin_LIBRARIES})
   install(
